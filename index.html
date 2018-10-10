@@ -16,7 +16,7 @@ Data extracted from the Scopus database (more info on https://dev.elsevier.com).
   text-align: justify;
   left:0;
   margin:0;
-  width: 600px;
+  width: 580px;
   height: 90px;
   font-size: 12px;
   background-color: white;
@@ -36,14 +36,14 @@ Data extracted from the Scopus database (more info on https://dev.elsevier.com).
 .context {
 margin-top:0px;
 font-size: 12px;
-width: 600px;
+width: 580px;
 text-align: justify;
 }
 
 #refreshicon {
   position: absolute;
   top:520px;
-  left: 580px;
+  left: 555px;
   font-size: 25px;
   color: #141414;
   z-index: 5;
@@ -66,7 +66,7 @@ body{
   <script src="d3.v5.min.js"></script>
   <i class="material-icons" id="refreshicon" onclick="location.reload();">refresh</i>
 <div id="tooltip"><p class="legend"><strong>Passez votre pointeur sur un point pour afficher l'article correspondant. <br> Vous pouvez zoomer sur le graphe avec la molette ou votre interface tactile.</strong></p></div>
-  <svg id="chronotypeExtract" width="600" height="450"></svg>
+  <svg id="chronotypeExtract" width="580" height="450"></svg>
   <p class="context">Visualisation des articles publiés dans des revues à comité de lecture listées sur la base de données Scopus dont les résumés (abstracts) contiennent les expressions "ZFN" ou "TALE" ou "TALEN" ou "CRISPR" et "HUMAN" et "EMBRYO". Requête soumise entre le 15 et le 30 septembre 2018 via http://api.elsevier.com (corrigée de certaines aberrations). A noter que beaucoup de ces articles partent de modèles animaux.</p><p class="context" style="text-align:right">Credit visualisation : Guillaume Levrier - GPLv3.</p>
 
 <script>
@@ -96,7 +96,7 @@ var yAxis = d3.axisRight(y);
 
 var zoom = d3.zoom()
              .scaleExtent([1, 20])
-             .translateExtent([[0,0], [600, 450]])
+             .translateExtent([[0,0], [580, 450]])
              .on("zoom", zoomed);
 
 
@@ -149,7 +149,7 @@ var gX = g.append("g")
             .call(xAxis);
 
 var gY = g.append("g")
-            .attr("transform", "translate(" + 570 + ",0)")
+            .attr("transform", "translate(" + 545 + ",0)")
             .call(yAxis);
 
 var yLegend = g.append("text")
