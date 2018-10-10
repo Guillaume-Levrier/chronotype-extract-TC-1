@@ -1,0 +1,165 @@
+<!DOCTYPE html><html><meta charset="UTF-8">
+<!--
+Author: Guillaume Levrier - Released under the GNU General Public License, version 3.
+Data extracted from the Scopus database (more info on https://dev.elsevier.com).
+-->
+<title>Chronotype Extract</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css?family=Noto+Sans');
+  @import url('https://fonts.googleapis.com/earlyaccess/notosanssc.css');
+  @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+#chronotypeExtract{margin-top:90px;}
+
+#tooltip {
+  position: absolute;
+  text-align: justify;
+  left:0;
+  margin:0;
+  width: 600px;
+  height: 90px;
+  font-size: 12px;
+  background-color: white;
+  display: block;
+  cursor: auto;
+  z-index: 2;
+  border: 1px solid gray;
+  pointer-events: all;
+}
+
+.legend {
+    top:0px;
+    padding: 5px;
+    margin: 0px;
+}
+
+.context {
+margin-top:0px;
+font-size: 12px;
+width: 600px;
+text-align: justify;
+}
+
+#refreshicon {
+  position: absolute;
+  top:520px;
+  left: 580px;
+  font-size: 25px;
+  color: #141414;
+  z-index: 5;
+}
+#refreshicon:hover {
+background-color: #141414;
+color: #FFF;
+cursor: pointer;
+z-index: 5;
+}
+
+svg{cursor: grab; }
+
+body{
+  overflow: hidden;
+  font-family: 'Noto Sans', 'Noto Sans SC', sans-serif;
+
+}
+  </style>
+  <script src="d3.v5.min.js"></script>
+  <i class="material-icons" id="refreshicon" onclick="location.reload();">refresh</i>
+<div id="tooltip"><p class="legend"><strong>Passez votre pointeur sur un point pour afficher l'article correspondant. <br> Vous pouvez zoomer sur le graphe avec la molette ou votre interface tactile.</strong></p></div>
+  <svg id="chronotypeExtract" width="600" height="450"></svg>
+  <p class="context">Visualisation des articles publiés dans des revues à comité de lecture listées sur la base de données Scopus dont les résumés (abstracts) contiennent les expressions "ZFN" ou "TALE" ou "TALEN" ou "CRISPR" et "HUMAN" et "EMBRYO". Requête soumise entre le 15 et le 30 septembre 2018 via http://api.elsevier.com (corrigée de certaines aberrations). A noter que beaucoup de ces articles partent de modèles animaux.</p><p class="context" style="text-align:right">Credit visualisation : Guillaume Levrier - GPLv3.</p>
+
+<script>
+  var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height"),
+       g = svg.append("g");
+
+const currentTime = new Date();
+const Past = d3.timeYear.offset(currentTime,-8);
+const Future = d3.timeYear.offset(currentTime,1);
+const parseTime = d3.timeParse("%Y-%m-%d");
+const formatTime = d3.timeFormat("%d/%m/%Y");
+const tooltip = d3.select("#tooltip");
+
+var x = d3.scaleTime()
+    .domain([Past, Future])
+    .range([0, width]);
+
+var xAxis = d3.axisBottom(x);
+
+var y = d3.scaleLinear()
+    .range([0, height])
+    .domain([80,-9]);
+
+var yAxis = d3.axisRight(y);
+
+var zoom = d3.zoom()
+             .scaleExtent([1, 20])
+             .translateExtent([[0,0], [600, 450]])
+             .on("zoom", zoomed);
+
+
+Promise.all([d3.json("data.json", {credentials: 'include'})])
+        .then(datajson => {
+          const data = datajson[0];
+
+    data.forEach(d => {
+        d.date = parseTime(d.coverDate);
+        d.year = d.coverDate.substring(0, 4);
+    });
+
+    var dataNest = d3.nest()
+                   .key(d => {return d.year;})
+                   .entries(data);
+
+
+    const piler = () => {
+      for (i = 0; i < dataNest.length; i++) {
+        let j = dataNest[i].values.length + 1;
+          for (k = 0; k < dataNest[i].values.length; k++) {
+            dataNest[i].values[k].indexPosition = j-1;
+            j--;
+          }
+      }
+    }
+
+    piler();
+
+  var circle = g.selectAll("circle")
+               .data(data)
+               .enter().append("circle")
+                  .style('fill',"darkgray")
+                  .attr("r", 2)
+                  .attr("cx", d => x(d.date))
+                  .attr("cy", d => y(d.indexPosition))
+                    .on("mouseover", function(d) {
+                         d3.select(this).style("fill", "black");
+                         d3.select(this).style("cursor", "crosshair");
+                        tooltip.html(
+                          '<p class="legend"><strong>' + d.title + '</strong> <br/> Publié le ' +
+                        formatTime(d.date) + '<br/>DOI : ' +
+                        d.doi + '<br/>' +
+                        'Article disponible <a target="_blank" href="https://dx.doi.org/'+d.doi+'">ici</a></p>')});
+
+})
+
+var gX = g.append("g")
+            .attr("transform", "translate(0," + 405 + ")")
+            .call(xAxis);
+
+var gY = g.append("g")
+            .attr("transform", "translate(" + 570 + ",0)")
+            .call(yAxis);
+
+var yLegend = g.append("text")
+             .attr("x", "10")
+             .attr("y", "435")
+             .style("font-size","10")
+             .text("Nombre d'articles publiés par an en ordre chronologique croissant");
+
+svg.call(zoom);
+
+function zoomed() { g.attr("transform", d3.event.transform); }
+
+  </script>
