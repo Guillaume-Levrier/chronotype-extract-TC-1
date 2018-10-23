@@ -27,17 +27,27 @@ Data extracted from the Scopus database (more info on https://dev.elsevier.com).
   pointer-events: all;
 }
 
+.switch{
+  display: inline-flex;
+  font-size: 10px;
+}
+
+label{
+  display: inline-flex;
+  font-size: 12px;
+}
+
 .legend {
-    top:0px;
-    padding: 5px;
-    margin: 0px;
+  top:0px;
+  padding: 5px;
+  margin: 0px;
 }
 
 .context {
-margin-top:0px;
-font-size: 12px;
-width: 580px;
-text-align: justify;
+  margin-top:0px;
+  font-size: 12px;
+  width: 580px;
+  text-align: justify;
 }
 
 #refreshicon {
@@ -49,10 +59,15 @@ text-align: justify;
   z-index: 5;
 }
 #refreshicon:hover {
-background-color: #141414;
-color: #FFF;
-cursor: pointer;
-z-index: 5;
+  background-color: #141414;
+  color: #FFF;
+  cursor: pointer;
+  z-index: 5;
+}
+
+#credit{
+  float:right;
+  font-size: 12px;
 }
 
 svg{cursor: grab; }
@@ -60,14 +75,23 @@ svg{cursor: grab; }
 body{
   overflow: hidden;
   font-family: 'Noto Sans', 'Noto Sans SC', sans-serif;
-
 }
-  </style>
-  <script src="d3.v5.min.js"></script>
-  <i class="material-icons" id="refreshicon" onclick="location.reload();">refresh</i>
-<div id="tooltip"><p class="legend"><strong>Passez votre pointeur sur un point pour afficher l'article correspondant. <br> Vous pouvez zoomer sur le graphe avec la molette ou votre interface tactile.</strong></p></div>
-  <svg id="chronotypeExtract" width="580" height="450"></svg>
-  <p class="context">Visualisation des articles publiés dans des revues à comité de lecture listées sur la base de données Scopus dont les résumés (abstracts) contiennent les expressions "ZFN" ou "TALE" ou "TALEN" ou "CRISPR" et "HUMAN" et "EMBRYO". Requête soumise entre le 15 et le 30 septembre 2018 via http://api.elsevier.com (corrigée de certaines aberrations). A noter que beaucoup de ces articles partent de modèles animaux.</p><p class="context" style="text-align:right">Credit visualisation : Guillaume Levrier - GPLv3.</p>
+</style>
+
+<script src="d3.v5.min.js"></script>
+
+<i class="material-icons" id="refreshicon" onclick="location.reload();">refresh</i>
+
+<div id="tooltip"><p class="legend"><strong>Use your pointer on a dot to display the articles's data.<br> You can zoom on the graph with your wheel or with your touchpad.</strong></p></div>
+
+<svg id="chronotypeExtract" width="580" height="450"></svg>
+
+<div id="explainer" class="context">Articles published in peer-reviewed journals listed on the Scopus database whose abstracts contain the expressions "ZFN" or "TALE" or "CRISPR" and "HUMAN" and "EMBRYO". Query sent between September 15-30 via http://api.elsevier.com (some unrelevant results have been removed). Most articles use animal models.</div>
+
+<div style="max-width:580px;">
+<label for="buttonEN"><input type="radio" name="switch" class="switch" id="buttonEN" value="EN" checked />English</label>
+<label for="buttonFR"><input type="radio" name="switch" class="switch" value="FR" id="buttonFR" />Français</label>
+<div id="credit">Credit visualisation : Guillaume Levrier - GPLv3.</div></div>
 
 <script>
   var svg = d3.select("svg"),
@@ -98,6 +122,25 @@ var zoom = d3.zoom()
              .scaleExtent([1, 20])
              .translateExtent([[0,0], [580, 450]])
              .on("zoom", zoomed);
+
+d3.selectAll(".switch").on("click", function() {
+         if(this.value === 'FR'){
+                        document.getElementById("tooltip").innerHTML = "<strong>Passez votre pointeur sur un point pour afficher l'article correspondant. <br> Vous pouvez zoomer sur le graphe avec la molette ou votre interface tactile.</strong>";
+                        document.getElementById("explainer").innerHTML = 'Visualisation des articles publiés dans des revues à comité de lecture listées sur la base de données Scopus dont les résumés (abstracts) contiennent les expressions "ZFN" ou "TALE" ou "TALEN" ou "CRISPR" et "HUMAN" et "EMBRYO". Requête soumise entre le 15 et le 30 septembre 2018 via http://api.elsevier.com (corrigée de certaines aberrations). A noter que beaucoup de ces articles partent de modèles animaux.';
+                        d3.select("#yLegend").remove().exit();
+                        g.append("text").attr("x", "10").attr("y", "435").attr("id","yLegend").style("font-size","10")
+                                        .text("Nombre d'articles publiés par an en ordre chronologique croissant");
+
+                      }
+         else if(this.value === 'EN'){
+                        document.getElementById("tooltip").innerHTML = "<strong>Use your pointer on a dot to display the articles's data.<br> You can zoom on the graph with your wheel or with your touchpad.</strong>";
+                        document.getElementById("explainer").innerHTML = 'Articles published in peer-reviewed journals listed on the Scopus database whose abstracts contain the expressions "ZFN" or "TALE" or "CRISPR" and "HUMAN" and "EMBRYO". Query sent between September 15-30 via http://api.elsevier.com (some unrelevant results have been removed). Most articles use animal models.';
+                        d3.select("#yLegend").remove().exit();
+                        g.append("text").attr("x", "10").attr("y", "435").attr("id","yLegend").style("font-size","10")
+                                        .text("Amount of articles published per year in ascending chronological order");
+                      }
+              })
+
 
 
 Promise.all([d3.json("data.json", {credentials: 'include'})])
@@ -141,7 +184,6 @@ Promise.all([d3.json("data.json", {credentials: 'include'})])
                         formatTime(d.date) + '<br/>DOI : ' +
                         d.doi + '<br/>' +
                         'Article disponible <a target="_blank" href="https://dx.doi.org/'+d.doi+'">ici</a></p>')});
-
 })
 
 var gX = g.append("g")
@@ -155,8 +197,9 @@ var gY = g.append("g")
 var yLegend = g.append("text")
              .attr("x", "10")
              .attr("y", "435")
+             .attr("id","yLegend")
              .style("font-size","10")
-             .text("Nombre d'articles publiés par an en ordre chronologique croissant");
+             .text("Amount of articles published per year in ascending chronological order");
 
 svg.call(zoom);
 
